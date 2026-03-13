@@ -20,11 +20,12 @@ load_dotenv()
 
 # ── LLM setup ────────────────────────────────────────────────────────────────
 
-_llm = ChatGroq(
-    model="meta-llama/llama-4-maverick-17b-128e-instruct",
-    api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.3,
-)
+def get_llm():
+    return ChatGroq(
+        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        api_key=os.getenv("GROQ_API_KEY"),
+        temperature=0.3,
+    )
 
 # ── Prompt templates ─────────────────────────────────────────────────────────
 
@@ -76,21 +77,21 @@ _RISK_ANALYSIS_PROMPT = ChatPromptTemplate.from_messages(
 
 def get_executive_summary(transcript: str) -> str:
     """Return a concise executive summary of the meeting."""
-    chain = _SUMMARY_PROMPT | _llm
+    chain = _SUMMARY_PROMPT | get_llm()
     response = chain.invoke({"transcript": transcript})
     return response.content
 
 
 def get_action_items(transcript: str) -> str:
     """Return action items as a JSON string."""
-    chain = _ACTION_ITEMS_PROMPT | _llm
+    chain = _ACTION_ITEMS_PROMPT | get_llm()
     response = chain.invoke({"transcript": transcript})
     return response.content
 
 
 def get_risk_analysis(transcript: str) -> str:
     """Return a risk analysis in markdown format."""
-    chain = _RISK_ANALYSIS_PROMPT | _llm
+    chain = _RISK_ANALYSIS_PROMPT | get_llm()
     response = chain.invoke({"transcript": transcript})
     return response.content
 
