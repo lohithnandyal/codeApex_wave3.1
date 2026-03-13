@@ -1,17 +1,18 @@
-# 🎙️ Multi-Modal Meeting Assistant
+# 🎙️ Multi-Modal Meeting Assistant (CodeApex Wave 3.1)
 
-> An AI-powered backend engine that turns raw meeting recordings into actionable intelligence — transcripts with speaker labels, executive summaries, structured action items, and risk analysis.
+> An AI-powered application that turns raw meeting recordings into actionable intelligence — transcripts with speaker labels, executive summaries, structured action items, risk analysis, and automated email follow-ups.
 
 ---
 
 ## 🧠 What It Does
 
-Upload a recorded meeting file (`.mp3` or `.mp4`) and the system will:
+Upload a recorded meeting file (`.mp3`, `.mp4`, `.wav`, etc.) via the clean Streamlit web interface and the system will:
 
-1. **Transcribe** the audio with speaker diarization (who said what)
-2. **Summarize** the meeting into a concise executive overview
-3. **Extract action items** as structured JSON (task, assignee, deadline)
-4. **Analyze risks** — flagging unresolved questions, blockers, and disagreements
+1. **Transcribe** the audio with speaker diarization (who said what).
+2. **Summarize** the meeting into a concise executive overview.
+3. **Extract action items** as structured JSON (task, assignee, deadline).
+4. **Analyze risks** — flagging unresolved questions, blockers, and disagreements.
+5. **Send Automated Emails** — mapping participants from an Excel sheet to the generated action items and sending personalized HTML email follow-ups automatically.
 
 ---
 
@@ -22,104 +23,31 @@ Upload a recorded meeting file (`.mp3` or `.mp4`) and the system will:
 │  Audio/Video │──────▶│   transcriber.py   │──────▶│ langchain_workflow.py│
 │  (.mp3/.mp4) │       │  (AssemblyAI SDK)  │       │  (LangChain + Groq)  │
 └──────────────┘       └────────────────────┘       └──────────┬───────────┘
-                              │                                │
-                              ▼                                ▼
-                     Diarized Transcript             3 Parallel LLM Chains
-                     (Speaker A, B, …)              ┌─────────────────────┐
-                                                    │ • Executive Summary │
-                                                    │ • Action Items JSON │
-                                                    │ • Risk Analysis     │
-                                                    └─────────────────────┘
+                               │                               │
+                               ▼                               ▼
+                      Diarized Transcript             3 Parallel LLM Chains
+                      (Speaker A, B, …)              ┌─────────────────────┐
+                                                     │ • Executive Summary │
+                                                     │ • Action Items JSON │
+                                                     │ • Risk Analysis     │
+                                                     └──────────┬──────────┘
+                                                                │
+                                                                ▼
+                                                     ┌─────────────────────┐
+                                                     │   email_agent.py    │
+                                                     │ (SMTP Data Mapping) │
+                                                     └─────────────────────┘
 ```
 
 ### Module Breakdown
 
 | Module | Role | Tech |
 |---|---|---|
+| `app.py` | Web UI & Pipeline Orchestration | Streamlit |
 | `transcriber.py` | Speech-to-text + speaker diarization | AssemblyAI SDK |
-| `langchain_workflow.py` | Meeting intelligence extraction | LangChain + Groq (Llama 4 Maverick) |
-
----
-
-## 🔄 End-to-End Workflow (Example)
-
-### Step 1 — Transcription
-
-**Input:** A 10-minute team standup recording (`standup.mp3`)
-
-**Process:** The file is sent to AssemblyAI, which returns a transcript with speaker labels.
-
-**Output:**
-```
-Speaker A: Good morning everyone. Let's go over the sprint status.
-Speaker B: The auth module is done. I'll start on the dashboard today.
-Speaker A: Great. What about the payment integration?
-Speaker B: I'm blocked — still waiting on the Stripe API keys from DevOps.
-Speaker A: I'll follow up with them. Can we get it resolved by Wednesday?
-Speaker B: If I get the keys by tomorrow, yes.
-Speaker A: Alright. Any other concerns?
-Speaker B: We haven't finalized the database schema for user profiles. That could be a risk.
-Speaker A: Noted. Let's schedule a design review for Thursday.
-```
-
-### Step 2 — Executive Summary
-
-The transcript is fed into the **Summary Chain** (Groq LLM).
-
-**Output:**
-> The team conducted a sprint standup reviewing current progress. The authentication
-> module has been completed and work on the dashboard will begin immediately. A key
-> blocker was identified around the Stripe API keys needed for payment integration,
-> with a follow-up planned with DevOps. The team also flagged an unresolved database
-> schema decision for user profiles, and a design review has been scheduled for Thursday
-> to address this gap.
-
-### Step 3 — Action Items (JSON)
-
-The transcript is fed into the **Action Items Chain**.
-
-**Output:**
-```json
-[
-  {
-    "task": "Follow up with DevOps for Stripe API keys",
-    "assignee": "Speaker A",
-    "deadline": "Tomorrow"
-  },
-  {
-    "task": "Start working on the dashboard",
-    "assignee": "Speaker B",
-    "deadline": "Today"
-  },
-  {
-    "task": "Complete payment integration",
-    "assignee": "Speaker B",
-    "deadline": "Wednesday"
-  },
-  {
-    "task": "Schedule and conduct database schema design review",
-    "assignee": "Speaker A",
-    "deadline": "Thursday"
-  }
-]
-```
-
-### Step 4 — Risk Analysis
-
-The transcript is fed into the **Risk Analysis Chain**.
-
-**Output:**
-> **Blockers**
-> - Speaker B is blocked on Stripe API keys from DevOps — payment integration cannot proceed.
->
-> **Unresolved Decisions**
-> - Database schema for user profiles has not been finalized.
->
-> **Dependencies**
-> - Payment integration deadline (Wednesday) depends on receiving API keys by tomorrow.
->
-> **Potential Risks**
-> - If the design review on Thursday surfaces major schema changes, it could impact the sprint timeline.
+| `langchain_workflow.py` | Meeting intelligence extraction | LangChain + Groq (Llama 3/4) |
+| `email_agent.py` | Participant mapping and email automation | smtplib, pandas |
+| `generate_mock_excel.py` | Utility to create sample participant data | pandas, openpyxl |
 
 ---
 
@@ -128,10 +56,11 @@ The transcript is fed into the **Risk Analysis Chain**.
 ### 1. Clone & Set Up
 
 ```bash
-# Navigate to the project
-cd CodeApex_wave3.0
+# Clone the repository
+git clone https://github.com/lohithnandyal/CodeApex_wave3.1.git
+cd CodeApex_wave3.1
 
-# Create virtual environment (already done if you cloned this repo)
+# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
@@ -139,63 +68,63 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure API Keys
+### 2. Configure Environment Variables
 
-Copy the example env file and add your keys:
+Create your `.env` file from the example:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env`:
-```
+Edit `.env` to include your API keys and email credentials:
+```env
 ASSEMBLYAI_API_KEY=your_assemblyai_key_here
 GROQ_API_KEY=your_groq_key_here
+EMAIL_ADDRESS=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
 ```
 
 | Key | Where to Get It |
 |---|---|
 | `ASSEMBLYAI_API_KEY` | [assemblyai.com/dashboard](https://www.assemblyai.com/dashboard) |
 | `GROQ_API_KEY` | [console.groq.com/keys](https://console.groq.com/keys) |
+| `EMAIL_ADDRESS` & `EMAIL_PASSWORD` | Use a Gmail App Password (2FA must be enabled) |
 
-### 3. Run It
+### 3. Generate Mock Data (Optional)
 
-```python
-from transcriber import transcribe_audio
-from langchain_workflow import get_executive_summary, get_action_items, get_risk_analysis
+To test the email functionality, generate a sample `participants.xlsx` file:
 
-# Step 1: Transcribe
-transcript = transcribe_audio("meeting.mp3")
-print(transcript)
-
-# Step 2: Analyze
-print(get_executive_summary(transcript))
-print(get_action_items(transcript))
-print(get_risk_analysis(transcript))
-```
-
-Or from the CLI:
 ```bash
-# Transcribe only
-python transcriber.py meeting.mp3
-
-# Full pipeline with sample data
-python langchain_workflow.py
+python generate_mock_excel.py
 ```
+*(Update the Excel file with your actual email addresses to receive the test emails!)*
+
+### 4. Run the Application
+
+Launch the Streamlit web app:
+
+```bash
+streamlit run app.py
+```
+
+The app will open in your browser at `http://localhost:8501`.
 
 ---
 
 ## 📂 Project Structure
 
 ```
-CodeApex_wave3.0/
+CodeApex_wave3.1/
+├── app.py                   # Streamlit Frontend Web App
 ├── transcriber.py           # Speech-to-text + speaker diarization
-├── langchain_workflow.py    # LangChain intelligence engine (3 chains)
+├── langchain_workflow.py    # LangChain intelligence engine
+├── email_agent.py           # Automated Email Follow-ups
+├── generate_mock_excel.py   # Script to generate sample participant data
+├── participants.xlsx        # Excel file mapping speakers to emails
 ├── requirements.txt         # Python dependencies
-├── .env.example             # API key template
-├── .env                     # Actual API keys (gitignored)
-├── README.md                # This file
-└── venv/                    # Virtual environment
+├── .env.example             # Environment variable template
+├── .env                     # Actual credentials (gitignored)
+└── README.md                # This file
 ```
 
 ---
@@ -204,31 +133,23 @@ CodeApex_wave3.0/
 
 | Layer | Technology | Purpose |
 |---|---|---|
-| Transcription | **AssemblyAI** | Industry-grade STT with speaker diarization |
-| LLM Inference | **Groq** (Llama 4 Maverick) | Ultra-fast inference for meeting analysis |
-| Orchestration | **LangChain** (LCEL) | Prompt management & LLM chaining |
-| Config | **python-dotenv** | Secure API key management |
+| **Frontend UI** | **Streamlit** | Interactive user interface |
+| **Transcription** | **AssemblyAI** | Industry-grade STT with speaker diarization |
+| **LLM Inference** | **Groq** | Ultra-fast inference for meeting analysis |
+| **Orchestration** | **LangChain** (LCEL) | Prompt management & LLM chaining |
+| **Automation** | **SMTP / Pandas** | Data extraction and automated emailing |
 
 ---
 
-## 🎯 For Evaluators
+## 🎯 Key Features Iteration (Wave 3.1)
 
-### Why This Architecture?
-
-1. **Modular Design** — Transcription and intelligence are completely decoupled. Swap AssemblyAI for Whisper, or Groq for OpenAI, with zero changes to the other module.
-2. **Production-Ready Prompts** — Each LLM chain uses a carefully engineered system prompt with structured output instructions (JSON for action items, markdown for analysis).
-3. **Speaker-Aware Intelligence** — Action items are attributed to specific speakers, not just extracted generically. This is possible because we pipe the diarized transcript directly into the LLM.
-4. **Scalable to UI** — The backend is UI-agnostic by design. It can be plugged into Streamlit, a React dashboard, a Slack bot, or a REST API.
-
-### Key Talking Points
-
-- "We use **AssemblyAI's speaker diarization** so the AI knows *who* said what — this is critical for assigning action items to the right person."
-- "The intelligence layer uses **three specialized LangChain chains**, each with a tailored system prompt, rather than one generic prompt — this gives much higher quality results."
-- "We chose **Groq** for inference because it provides the fastest available LLM inference, making the entire pipeline feel near-real-time."
-- "The architecture is **modular and UI-agnostic** — we can plug in any frontend without touching the core logic."
+This version introduces several key advancements:
+1. **Full Web UI:** Replaced CLI-only execution with a rich, interactive Streamlit frontend.
+2. **Automated Follow-ups:** Integrated an `email_agent` that automatically maps recognized speakers to email addresses using an Excel sheet and dispatches personalized action item summaries.
+3. **Enhanced Robustness:** Better error handling across all API limits and parsing edges.
 
 ---
 
 ## 📝 License
 
-Built for CodeApex Wave 3.0 Hackathon.
+Built for CodeApex Wave 3.1.
