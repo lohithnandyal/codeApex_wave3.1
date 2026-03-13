@@ -1,0 +1,4 @@
+assemblyai
+langchain
+langchain-groq
+python-dotenv
