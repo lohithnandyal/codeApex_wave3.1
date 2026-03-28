@@ -1,10 +1,10 @@
-# 🎙️ Multi-Modal Meeting Assistant (CodeApex Wave 3.1)
+#  Multi-Modal Meeting Assistant (CodeApex Wave 3.1)
 
 > An AI-powered application that turns raw meeting recordings into actionable intelligence — transcripts with speaker labels, executive summaries, structured action items, risk analysis, and automated email follow-ups.
 
 ---
 
-## 🧠 What It Does
+##  What It Does
 
 Upload a recorded meeting file (`.mp3`, `.mp4`, `.wav`, etc.) via the clean Streamlit web interface and the system will:
 
@@ -16,7 +16,7 @@ Upload a recorded meeting file (`.mp3`, `.mp4`, `.wav`, etc.) via the clean Stre
 
 ---
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ```
 ┌──────────────┐       ┌────────────────────┐       ┌──────────────────────┐
@@ -51,7 +51,7 @@ Upload a recorded meeting file (`.mp3`, `.mp4`, `.wav`, etc.) via the clean Stre
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Clone & Set Up
 
